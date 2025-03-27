@@ -7,8 +7,8 @@ import eu.reportincident.incident_service.model.entity.IncidentImageEntity;
 import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.request.FilterRequest;
 import eu.reportincident.incident_service.model.request.IncidentRequest;
+import eu.reportincident.incident_service.model.request.IncidentStatusRequest;
 import eu.reportincident.incident_service.repository.IncidentEntityRepository;
-import eu.reportincident.incident_service.repository.IncidentImageEntityRepository;
 import eu.reportincident.incident_service.service.IncidentService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +35,7 @@ public class IncidentServiceImpl implements IncidentService {
     private EntityManager entityManager;
 
     @Autowired
-    public IncidentServiceImpl(IncidentEntityRepository incidentRepository, ModelMapper modelMapper, IncidentImageEntityRepository incidentImageEntityRepository) {
+    public IncidentServiceImpl(IncidentEntityRepository incidentRepository, ModelMapper modelMapper) {
         this.incidentRepository = incidentRepository;
         this.modelMapper = modelMapper;
     }
@@ -134,5 +135,16 @@ public class IncidentServiceImpl implements IncidentService {
         return new PageImpl<>(incidents, page, incidentEntityPage.getTotalElements());
     }
 
-
+    @Override
+    public Incident updateStatus(long id, IncidentStatusRequest status) {
+        Optional<IncidentEntity> incidentEntity = incidentRepository.findById(id);
+        if (incidentEntity.isPresent()) {
+            IncidentEntity updatedIncident = incidentEntity.get();
+            updatedIncident.setStatus(status.getStatus());
+            updatedIncident = incidentRepository.saveAndFlush(updatedIncident);
+            return modelMapper.map(updatedIncident, Incident.class);
+        } else {
+            throw new NotFoundException("Incident not found with id: " + id);
+        }
+    }
 }

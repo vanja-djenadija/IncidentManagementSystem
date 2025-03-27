@@ -5,6 +5,7 @@ import eu.reportincident.incident_service.model.dto.Incident;
 import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.request.FilterRequest;
 import eu.reportincident.incident_service.model.request.IncidentRequest;
+import eu.reportincident.incident_service.model.request.IncidentStatusRequest;
 import eu.reportincident.incident_service.service.IncidentService;
 import eu.reportincident.incident_service.service.S3Service;
 import jakarta.validation.Valid;
@@ -86,4 +87,11 @@ public class IncidentController {
     public Page<Incident> findByFilter(Pageable page, @RequestBody @Valid FilterRequest filterRequest) {
         return incidentService.filter(page, filterRequest);
     }
+
+    @PutMapping("/{id}/status")
+    public ResponseEntity<Incident> updateStatus(@PathVariable long id, @RequestBody IncidentStatusRequest status) {
+        Incident updatedIncident = incidentService.updateStatus(id, status);
+        return ResponseEntity.ok(updatedIncident);
+    }
+
 }
