@@ -1,5 +1,6 @@
 package eu.reportincident.incident_service.model.entity;
 
+import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.enums.IncidentSubtype;
 import eu.reportincident.incident_service.model.enums.IncidentType;
 import jakarta.persistence.*;
@@ -41,10 +42,13 @@ public class IncidentEntity {
 
     private LocalDateTime reportedAt;
 
-    private boolean approved = false;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private IncidentStatus status = IncidentStatus.REPORTED;
 
     @PrePersist
     protected void onCreate() {
         reportedAt = LocalDateTime.now();
+        status = IncidentStatus.REPORTED; // Default status pri kreiranju incidenta
     }
 }

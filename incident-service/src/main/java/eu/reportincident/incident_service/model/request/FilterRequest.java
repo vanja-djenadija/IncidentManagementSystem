@@ -1,5 +1,6 @@
 package eu.reportincident.incident_service.model.request;
 
+import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,7 +13,7 @@ public class FilterRequest {
     private String incidentType;
     private String incidentSubtype;
     private String location;
-    private Boolean approved;
+    private IncidentStatus status;
     private String timeRange;  // The time range string (24h, 7d, 31d)
 
     // Return the start date based on the time range (24h, 7d, 31d)

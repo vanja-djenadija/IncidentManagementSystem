@@ -3,6 +3,7 @@ package eu.reportincident.incident_service.config;
 import eu.reportincident.incident_service.model.entity.IncidentEntity;
 import eu.reportincident.incident_service.model.entity.IncidentImageEntity;
 import eu.reportincident.incident_service.model.entity.Location;
+import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.enums.IncidentSubtype;
 import eu.reportincident.incident_service.model.enums.IncidentType;
 import eu.reportincident.incident_service.repository.IncidentEntityRepository;
@@ -29,7 +30,7 @@ public class DataLoader {
                             .description("Test incident description " + i)
                             .location(generateLocation(i))
                             .reportedAt(LocalDateTime.now())
-                            .approved(i % 2 == 0) // Aproveraj samo parne incidente
+                            .status(i % 2 == 0 ? IncidentStatus.APPROVED : IncidentStatus.PENDING)
                             .build();
 
                     for (IncidentImageEntity image : images) {
@@ -39,7 +40,6 @@ public class DataLoader {
                     incident.setImages(images);
 
                     incidentRepository.save(incident);
-
                 }
             }
         };

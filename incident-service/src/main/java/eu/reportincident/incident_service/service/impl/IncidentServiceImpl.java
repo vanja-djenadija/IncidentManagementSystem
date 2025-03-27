@@ -4,6 +4,7 @@ import eu.reportincident.incident_service.exception.NotFoundException;
 import eu.reportincident.incident_service.model.dto.Incident;
 import eu.reportincident.incident_service.model.entity.IncidentEntity;
 import eu.reportincident.incident_service.model.entity.IncidentImageEntity;
+import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.request.FilterRequest;
 import eu.reportincident.incident_service.model.request.IncidentRequest;
 import eu.reportincident.incident_service.repository.IncidentEntityRepository;
@@ -13,7 +14,6 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
-import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.*;
@@ -29,7 +29,6 @@ public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentEntityRepository incidentRepository;
     private final ModelMapper modelMapper;
-    private final IncidentImageEntityRepository incidentImageEntityRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -38,25 +37,17 @@ public class IncidentServiceImpl implements IncidentService {
     public IncidentServiceImpl(IncidentEntityRepository incidentRepository, ModelMapper modelMapper, IncidentImageEntityRepository incidentImageEntityRepository) {
         this.incidentRepository = incidentRepository;
         this.modelMapper = modelMapper;
-        this.incidentImageEntityRepository = incidentImageEntityRepository;
-    }
-
-    @Override
-    public Page<Incident> findAllApproved(Pageable page) {
-        return incidentRepository.findAllByApproved(true, page)
-                .map(entity -> modelMapper.map(entity, Incident.class));
     }
 
     @Override
     public Incident findById(long id) {
-        return modelMapper.map(incidentRepository.findByIdAndApproved(id, true).orElseThrow(NotFoundException::new), Incident.class);
+        return modelMapper.map(incidentRepository.findByIdAndStatus(id, IncidentStatus.APPROVED).orElseThrow(NotFoundException::new), Incident.class);
     }
 
     @Override
     public Incident create(IncidentRequest incidentRequest) {
         IncidentEntity incidentEntity = modelMapper.map(incidentRequest, IncidentEntity.class);
         incidentEntity.setReportedAt(LocalDateTime.now());
-        incidentEntity.setApproved(false);
 
         List<IncidentImageEntity> images = new ArrayList<>(incidentEntity.getImages());
         for (IncidentImageEntity imageEntity : images) {
@@ -94,8 +85,8 @@ public class IncidentServiceImpl implements IncidentService {
         }
 
         // Filtriranje prema approved
-        if (filterRequest.getApproved() != null) {
-            predicates.add(cb.equal(root.get("approved"), filterRequest.getApproved()));
+        if (filterRequest.getStatus() != null) {
+            predicates.add(cb.equal(root.get("status"), filterRequest.getStatus()));
         }
 
         // Filtriranje prema vremenskom periodu (ako je timeRange postavljen)
@@ -118,6 +109,29 @@ public class IncidentServiceImpl implements IncidentService {
                 .collect(Collectors.toList());
 
         return new PageImpl<>(incidents, page, totalElements);
+    }
+
+    @Override
+    public Page<Incident> findAll(Pageable page) {
+
+        Page<IncidentEntity> incidentEntityPage = incidentRepository.findAll(page);
+
+        List<Incident> incidents = incidentEntityPage.stream()
+                .map(incidentEntity -> modelMapper.map(incidentEntity, Incident.class))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(incidents, page, incidentEntityPage.getTotalElements());
+    }
+
+    @Override
+    public Page<Incident> findByStatus(Pageable page, IncidentStatus status) {
+        Page<IncidentEntity> incidentEntityPage = incidentRepository.findByStatus(status, page);
+
+        List<Incident> incidents = incidentEntityPage.stream()
+                .map(incidentEntity -> modelMapper.map(incidentEntity, Incident.class))
+                .collect(Collectors.toList());
+
+        return new PageImpl<>(incidents, page, incidentEntityPage.getTotalElements());
     }
 
 

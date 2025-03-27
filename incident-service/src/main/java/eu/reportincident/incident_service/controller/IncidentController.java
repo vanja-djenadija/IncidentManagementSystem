@@ -2,6 +2,7 @@ package eu.reportincident.incident_service.controller;
 
 import eu.reportincident.incident_service.model.dto.FileUploadResponse;
 import eu.reportincident.incident_service.model.dto.Incident;
+import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.request.FilterRequest;
 import eu.reportincident.incident_service.model.request.IncidentRequest;
 import eu.reportincident.incident_service.service.IncidentService;
@@ -37,14 +38,17 @@ public class IncidentController {
     }
 
     @GetMapping
-    public Page<Incident> findByApproved(Pageable page) {
-        return incidentService.findAllApproved(page);
+    public Page<Incident> findByStatus(Pageable page, @RequestParam(value = "status", required = false) IncidentStatus status) {
+        if (status == null) {
+            return incidentService.findAll(page);
+        } else {
+            return incidentService.findByStatus(page, status);
+        }
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<Incident> findById(@PathVariable long id) {
         Optional<Incident> incident = Optional.ofNullable(incidentService.findById(id));
-        // return 404 if not found
         return incident.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).body(null));
     }
 
