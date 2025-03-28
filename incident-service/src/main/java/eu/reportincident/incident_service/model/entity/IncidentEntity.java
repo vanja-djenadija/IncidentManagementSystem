@@ -42,6 +42,8 @@ public class IncidentEntity {
 
     private LocalDateTime reportedAt;
 
+    private LocalDateTime lastUpdated;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private IncidentStatus status = IncidentStatus.REPORTED;

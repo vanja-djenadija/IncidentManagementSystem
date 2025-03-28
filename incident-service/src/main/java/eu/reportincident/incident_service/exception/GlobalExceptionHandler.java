@@ -1,6 +1,7 @@
 package eu.reportincident.incident_service.exception;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -49,7 +50,7 @@ public class GlobalExceptionHandler {
     }
 
     private Logger getLogger(HandlerMethod handlerMethod) {
-        return Logger.getLogger(handlerMethod.getMethod().getDeclaringClass());
+        return LogManager.getLogger(handlerMethod.getMethod().getDeclaringClass());
     }
 
     private String getMessage(Throwable throwable) {

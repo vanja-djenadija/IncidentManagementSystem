@@ -1,5 +1,7 @@
 package eu.reportincident.incident_service.service.impl;
 
+import eu.reportincident.incident_service.event.IncidentCreatedEvent;
+import eu.reportincident.incident_service.event.RabbitMQProducer;
 import eu.reportincident.incident_service.exception.NotFoundException;
 import eu.reportincident.incident_service.model.dto.Incident;
 import eu.reportincident.incident_service.model.entity.IncidentEntity;
@@ -7,7 +9,7 @@ import eu.reportincident.incident_service.model.entity.IncidentImageEntity;
 import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.request.FilterRequest;
 import eu.reportincident.incident_service.model.request.IncidentRequest;
-import eu.reportincident.incident_service.model.request.IncidentStatusRequest;
+import eu.reportincident.incident_service.model.request.IncidentStatusUpdateRequest;
 import eu.reportincident.incident_service.repository.IncidentEntityRepository;
 import eu.reportincident.incident_service.service.IncidentService;
 import jakarta.persistence.EntityManager;
@@ -16,6 +18,7 @@ import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 
@@ -30,19 +33,21 @@ public class IncidentServiceImpl implements IncidentService {
 
     private final IncidentEntityRepository incidentRepository;
     private final ModelMapper modelMapper;
-
+    private final RabbitMQProducer rabbitMQProducer;
     @PersistenceContext
     private EntityManager entityManager;
 
     @Autowired
-    public IncidentServiceImpl(IncidentEntityRepository incidentRepository, ModelMapper modelMapper) {
+    public IncidentServiceImpl(IncidentEntityRepository incidentRepository, ModelMapper modelMapper, RabbitMQProducer rabbitMQProducer) {
         this.incidentRepository = incidentRepository;
         this.modelMapper = modelMapper;
+        this.rabbitMQProducer = rabbitMQProducer;
     }
 
     @Override
     public Incident findById(long id) {
-        return modelMapper.map(incidentRepository.findByIdAndStatus(id, IncidentStatus.APPROVED).orElseThrow(NotFoundException::new), Incident.class);
+        // TODO: Anonymous users get only APPROVED incidents, ADMIN can get any status
+        return modelMapper.map(incidentRepository.findById(id).orElseThrow(NotFoundException::new), Incident.class);
     }
 
     @Override
@@ -57,6 +62,10 @@ public class IncidentServiceImpl implements IncidentService {
 
         incidentEntity.setImages(images);
         incidentEntity = incidentRepository.saveAndFlush(incidentEntity);
+
+        // Send event that new incident has been created
+        IncidentCreatedEvent event = new IncidentCreatedEvent(incidentEntity.getId(), LocalDateTime.now());
+        rabbitMQProducer.sendIncidentCreatedEvent(event);
 
         return modelMapper.map(incidentEntity, Incident.class);
     }
@@ -136,7 +145,7 @@ public class IncidentServiceImpl implements IncidentService {
     }
 
     @Override
-    public Incident updateStatus(long id, IncidentStatusRequest status) {
+    public Incident updateStatus(long id, IncidentStatusUpdateRequest status) {
         Optional<IncidentEntity> incidentEntity = incidentRepository.findById(id);
         if (incidentEntity.isPresent()) {
             IncidentEntity updatedIncident = incidentEntity.get();
