@@ -1,5 +1,6 @@
 package eu.reportincident.moderation_service.service.impl;
 
+import eu.reportincident.moderation_service.config.WebClientConfig;
 import eu.reportincident.moderation_service.event.IncidentStatusUpdateEvent;
 import eu.reportincident.moderation_service.event.RabbitMQProducer;
 import eu.reportincident.moderation_service.model.dto.Incident;
@@ -13,6 +14,9 @@ import eu.reportincident.moderation_service.repository.IncidentStatusHistoryRepo
 import eu.reportincident.moderation_service.service.ModerationService;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
+import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import eu.reportincident.moderation_service.exception.NotFoundException;
@@ -27,12 +31,14 @@ public class ModerationServiceImpl implements ModerationService {
     private final IncidentStatusHistoryRepository incidentStatusHistoryRepository;
     private final ModelMapper modelMapper;
     private final RabbitMQProducer rabbitMQProducer;
+    private final WebClient.Builder webClientBuilder;
 
-    public ModerationServiceImpl(IncidentModerationRepository incidentModerationRepository, IncidentStatusHistoryRepository incidentStatusHistoryRepository, ModelMapper modelMapper, RabbitMQProducer rabbitMQProducer) {
+    public ModerationServiceImpl(IncidentModerationRepository incidentModerationRepository, IncidentStatusHistoryRepository incidentStatusHistoryRepository, ModelMapper modelMapper, RabbitMQProducer rabbitMQProducer, WebClient.Builder webClientBuilder) {
         this.incidentModerationRepository = incidentModerationRepository;
         this.incidentStatusHistoryRepository = incidentStatusHistoryRepository;
         this.modelMapper = modelMapper;
         this.rabbitMQProducer = rabbitMQProducer;
+        this.webClientBuilder = webClientBuilder;
     }
 
     @Override
@@ -64,25 +70,13 @@ public class ModerationServiceImpl implements ModerationService {
 
     /* Sinhrona komunikacija */
     public Incident getIncident(Long incidentId) {
-        // Preuzmi podatke o incidentu iz incident-service
-        WebClient incidentClient = WebClient.builder().baseUrl("http://localhost:8081/api/v1/incidents").build();
+        WebClient incidentClient = webClientBuilder.baseUrl("http://incident-service/api/v1/incidents").build();
 
         return incidentClient.get().uri("/{id}", incidentId).retrieve().bodyToMono(Incident.class).block();
     }
 
+
     /*
-    import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.client.WebClient;
-
-@Configuration
-public class WebClientConfig {
-
-    @Bean
-    public WebClient.Builder webClientBuilder() {
-        return WebClient.builder();
-    }
-}
 
 
 import eu.reportincident.moderation_service.model.dto.Incident;
