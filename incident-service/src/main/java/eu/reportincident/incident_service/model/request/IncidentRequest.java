@@ -1,7 +1,7 @@
 package eu.reportincident.incident_service.model.request;
 
 import eu.reportincident.incident_service.model.dto.IncidentImage;
-import eu.reportincident.incident_service.model.entity.Location;
+import eu.reportincident.incident_service.model.dto.Location;
 import eu.reportincident.incident_service.model.enums.IncidentSubtype;
 import eu.reportincident.incident_service.model.enums.IncidentType;
 import lombok.AllArgsConstructor;

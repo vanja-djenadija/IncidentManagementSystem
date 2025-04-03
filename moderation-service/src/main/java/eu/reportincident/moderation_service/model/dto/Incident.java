@@ -1,8 +1,8 @@
-package eu.reportincident.incident_service.model.dto;
+package eu.reportincident.moderation_service.model.dto;
 
-import eu.reportincident.incident_service.model.enums.IncidentStatus;
-import eu.reportincident.incident_service.model.enums.IncidentSubtype;
-import eu.reportincident.incident_service.model.enums.IncidentType;
+import eu.reportincident.moderation_service.model.enums.IncidentStatus;
+import eu.reportincident.moderation_service.model.enums.IncidentSubtype;
+import eu.reportincident.moderation_service.model.enums.IncidentType;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,3 +25,4 @@ public class Incident implements Serializable {
     private LocalDateTime reportedAt;
     private IncidentStatus status;
 }
+

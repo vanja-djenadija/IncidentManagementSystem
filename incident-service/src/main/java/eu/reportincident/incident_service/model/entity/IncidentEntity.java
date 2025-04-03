@@ -1,5 +1,6 @@
 package eu.reportincident.incident_service.model.entity;
 
+import eu.reportincident.incident_service.model.dto.Location;
 import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.enums.IncidentSubtype;
 import eu.reportincident.incident_service.model.enums.IncidentType;

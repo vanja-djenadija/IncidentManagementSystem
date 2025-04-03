@@ -2,6 +2,7 @@ package eu.reportincident.moderation_service.service.impl;
 
 import eu.reportincident.moderation_service.event.IncidentStatusUpdateEvent;
 import eu.reportincident.moderation_service.event.RabbitMQProducer;
+import eu.reportincident.moderation_service.model.dto.Incident;
 import eu.reportincident.moderation_service.model.dto.IncidentModeration;
 import eu.reportincident.moderation_service.model.entity.IncidentModerationEntity;
 import eu.reportincident.moderation_service.model.entity.IncidentStatusHistoryEntity;
@@ -43,8 +44,7 @@ public class ModerationServiceImpl implements ModerationService {
     @Transactional
     public IncidentModeration updateIncidentStatus(Long incidentId, IncidentStatus status, Long moderatorId) {
 
-        IncidentModerationEntity incidentModerationEntity = incidentModerationRepository.findById(incidentId)
-                .orElseThrow(() -> new NotFoundException("Incident not found with ID: " + incidentId));
+        IncidentModerationEntity incidentModerationEntity = incidentModerationRepository.findById(incidentId).orElseThrow(() -> new NotFoundException("Incident not found with ID: " + incidentId));
 
         incidentModerationEntity.setStatus(status);
         incidentModerationEntity.setModeratorId(moderatorId);
@@ -52,24 +52,62 @@ public class ModerationServiceImpl implements ModerationService {
         incidentModerationEntity = incidentModerationRepository.save(incidentModerationEntity);
 
 
-        IncidentStatusHistoryEntity statusHistory = IncidentStatusHistoryEntity.builder()
-                .incidentId(incidentId)
-                .status(status)
-                .statusChangeTime(LocalDateTime.now())
-                .moderatorId(moderatorId)
-                .build();
+        IncidentStatusHistoryEntity statusHistory = IncidentStatusHistoryEntity.builder().incidentId(incidentId).status(status).statusChangeTime(LocalDateTime.now()).moderatorId(moderatorId).build();
         incidentStatusHistoryRepository.save(statusHistory);
 
         // Send event to RabbitMQ about incident status update
-        IncidentStatusUpdateEvent statusEvent = new IncidentStatusUpdateEvent(
-                incidentId,
-                status,
-                LocalDateTime.now()
-        );
+        IncidentStatusUpdateEvent statusEvent = new IncidentStatusUpdateEvent(incidentId, status, LocalDateTime.now());
         rabbitMQProducer.sendIncidentStatusUpdatedEvent(statusEvent);
 
         return modelMapper.map(incidentModerationEntity, IncidentModeration.class);
     }
 
+    /* Sinhrona komunikacija */
+    public Incident getIncident(Long incidentId) {
+        // Preuzmi podatke o incidentu iz incident-service
+        WebClient incidentClient = WebClient.builder().baseUrl("http://localhost:8081/api/v1/incidents").build();
+
+        return incidentClient.get().uri("/{id}", incidentId).retrieve().bodyToMono(Incident.class).block();
+    }
+
+    /*
+    import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.reactive.function.client.WebClient;
+
+@Configuration
+public class WebClientConfig {
+
+    @Bean
+    public WebClient.Builder webClientBuilder() {
+        return WebClient.builder();
+    }
+}
+
+
+import eu.reportincident.moderation_service.model.dto.Incident;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+@Service
+public class IncidentClient {
+
+    private final WebClient webClient;
+
+    public IncidentClient(WebClient.Builder webClientBuilder) {
+        this.webClient = webClientBuilder.baseUrl("http://incident-service/api/v1/incidents").build();
+    }
+
+    public Incident getIncidentById(Long incidentId) {
+        return webClient.get()
+                .uri("/{id}", incidentId)
+                .retrieve()
+                .bodyToMono(Incident.class)
+                .block(); // Sinhrona obrada (blokirajući poziv)
+    }
+}
+
+     */
 
 }

@@ -2,7 +2,7 @@ package eu.reportincident.incident_service.config;
 
 import eu.reportincident.incident_service.model.entity.IncidentEntity;
 import eu.reportincident.incident_service.model.entity.IncidentImageEntity;
-import eu.reportincident.incident_service.model.entity.Location;
+import eu.reportincident.incident_service.model.dto.Location;
 import eu.reportincident.incident_service.model.enums.IncidentStatus;
 import eu.reportincident.incident_service.model.enums.IncidentSubtype;
 import eu.reportincident.incident_service.model.enums.IncidentType;

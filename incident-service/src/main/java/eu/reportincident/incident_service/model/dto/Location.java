@@ -1,4 +1,4 @@
-package eu.reportincident.incident_service.model.entity;
+package eu.reportincident.incident_service.model.dto;
 
 import jakarta.persistence.Embeddable;
 import lombok.*;

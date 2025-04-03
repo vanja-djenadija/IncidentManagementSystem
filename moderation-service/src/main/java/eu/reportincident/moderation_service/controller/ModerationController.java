@@ -1,5 +1,6 @@
 package eu.reportincident.moderation_service.controller;
 
+import eu.reportincident.moderation_service.model.dto.Incident;
 import eu.reportincident.moderation_service.model.dto.IncidentModeration;
 import eu.reportincident.moderation_service.model.enums.IncidentStatus;
 import eu.reportincident.moderation_service.model.request.IncidentStatusUpdateRequest;
@@ -26,5 +27,10 @@ public class ModerationController {
     public ResponseEntity<IncidentModeration> updateIncidentStatus(@PathVariable long incidentId, @RequestBody IncidentStatusUpdateRequest request) {
         // TODO: Pass moderatorId, after authentication part
         return ResponseEntity.ok(moderationService.updateIncidentStatus(incidentId, request.getStatus(), 1L));
+    }
+
+    @GetMapping("/incidents/{incidentId}")
+    public ResponseEntity<Incident> getIncident(@PathVariable Long incidentId) {
+        return ResponseEntity.ok(moderationService.getIncident(incidentId));
     }
 }
