@@ -14,7 +14,6 @@ import org.springframework.context.annotation.PropertySource;
 
 @Configuration
 @EnableRabbit
-@PropertySource("classpath:application.properties")
 public class RabbitMQConfig {
 
     private final RabbitMQProperties rabbitMQProperties;
@@ -22,6 +21,7 @@ public class RabbitMQConfig {
     public RabbitMQConfig(RabbitMQProperties rabbitMQProperties) {
         this.rabbitMQProperties = rabbitMQProperties;
     }
+
     @Bean
     public MessageConverter jacksonMessageConverter() {
         return new Jackson2JsonMessageConverter();
